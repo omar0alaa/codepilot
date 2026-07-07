@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # Laravel Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codepilot_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+      - ./docker/app/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - codepilot-network
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+      - QUEUE_HOST=redis
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: codepilot_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - .:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - codepilot-network
+    depends_on:
+      - app
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: codepilot_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: codepilot
+      POSTGRES_USER: codepilot
+      POSTGRES_PASSWORD: codepilot
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - codepilot-network
+    ports:
+      - "5432:5432"
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7-alpine
+    container_name: codepilot_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass codepilot_redis
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - codepilot-network
+    ports:
+      - "6379:6379"
+
+  # Queue Worker (Horizon)
+  horizon:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codepilot_horizon
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan horizon
+    volumes:
+      - .:/var/www
+    networks:
+      - codepilot-network
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
+
+  # Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codepilot_scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan schedule:work
+    volumes:
+      - .:/var/www
+    networks:
+      - codepilot-network
+    depends_on:
+      - postgres
+      - redis
+
+  # Mailpit for Email Testing
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: codepilot_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - codepilot-network
+
+  # Optional: MinIO for Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: codepilot_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    volumes:
+      - minio_data:/data
+    networks:
+      - codepilot-network
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+
+networks:
+  codepilot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
