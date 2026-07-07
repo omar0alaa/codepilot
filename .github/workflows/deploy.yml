@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, pgsql, redis, bcmath
+
+      - name: Install dependencies
+        run: composer install --no-dev --no-progress --no-interaction --prefer-dist
+
+      - name: Build Docker image
+        run: docker build -t codepilot-ai:${{ github.sha }} .
+
+      - name: Run database migrations
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: php artisan migrate --force
+
+      - name: Cache optimization
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      - name: Restart queue workers
+        run: |
+          php artisan queue:restart
+          echo "Queue workers restarted"
+
+      - name: Application health check
+        run: |
+          sleep 5
+          curl -f http://localhost/health || exit 1
+          echo "Health check passed"
