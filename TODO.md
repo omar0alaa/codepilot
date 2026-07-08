@@ -94,18 +94,20 @@
 - [x] Document queue configuration in QUEUES.md
 
 ### Phase 7: AI Review Engine
-- [ ] Design AI Provider Abstraction Layer (interface)
+- [x] Design AI Provider Abstraction Layer (interface) — AiProviderInterface
 - [ ] Implement Ollama provider
 - [ ] Implement OpenAI provider
 - [ ] Implement Claude provider
 - [ ] Implement Gemini provider
 - [ ] Implement OpenRouter provider
-- [ ] Create prompt template management system
+- [x] Implement Groq provider (primary, configured with API key)
+- [x] Create prompt template management system (PromptTemplateBuilder)
 - [ ] Build prompt versioning system
-- [ ] Implement context window management
-- [ ] Create review categorization logic
-- [ ] Add confidence scoring for suggestions
-- [ ] Write AI provider tests with mocks
+- [x] Implement context window management (12k char truncation)
+- [x] Create review categorization logic (security, performance, maintainability, etc.)
+- [x] Add confidence scoring for suggestions (0.0-1.0)
+- [x] Create ReviewAnalyzerService (orchestrates AI call + JSON parsing/normalization)
+- [x] Write AI provider tests with mocks
 
 ### Phase 8: PR Processing & Feedback
 - [ ] Extract PR diff using GitHub API
@@ -188,7 +190,8 @@
 ---
 
 **Last Updated:** 2026-07-07  
-**Current Focus:** Phase 7 - AI Review Engine
+**Current Focus:** Phase 8 - PR Processing & Feedback
 **Phases 1-3:** ✅ Complete
 **Phases 4-5:** ✅ Complete
 **Phase 6:** ✅ Complete
+**Phase 7:** ✅ Complete (Groq implemented, other providers planned)

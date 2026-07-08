@@ -112,6 +112,55 @@ class GroqProvider implements AiProviderInterface
         return 'groq';
     }
 
+    /**
+     * Send a chat completion request and return the raw text response
+     */
+    public function chat(string $prompt, ?string $systemMessage = null): string
+    {
+        try {
+            $messages = [];
+            
+            if ($systemMessage) {
+                $messages[] = [
+                    'role' => 'system',
+                    'content' => $systemMessage,
+                ];
+            }
+            
+            $messages[] = [
+                'role' => 'user',
+                'content' => $prompt,
+            ];
+
+            $response = $this->httpClient->post('/chat/completions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'model' => $this->model,
+                    'messages' => $messages,
+                    'temperature' => 0.3,
+                    'max_tokens' => 4096,
+                ],
+            ]);
+
+            $body = json_decode($response->getBody()->getContents(), true);
+            return $body['choices'][0]['message']['content'] ?? '';
+
+        } catch (GuzzleException $e) {
+            throw new \Exception('Groq chat API error: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get current model name
+     */
+    public function getModel(): string
+    {
+        return $this->model;
+    }
+
     public function getConfigRequirements(): array
     {
         return [

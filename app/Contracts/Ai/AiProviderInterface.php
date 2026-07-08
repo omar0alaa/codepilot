@@ -20,9 +20,23 @@ interface AiProviderInterface
     public function analyze(array $context, array $promptTemplate): array;
 
     /**
+     * Send a chat completion request
+     *
+     * @param string $prompt The user prompt
+     * @param string|null $systemMessage Optional system message
+     * @return string The AI response text
+     */
+    public function chat(string $prompt, ?string $systemMessage = null): string;
+
+    /**
      * Get provider name
      */
     public function getName(): string;
+
+    /**
+     * Get current model
+     */
+    public function getModel(): string;
 
     /**
      * Get provider configuration requirements
