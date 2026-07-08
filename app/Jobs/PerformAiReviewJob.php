@@ -69,8 +69,8 @@ class PerformAiReviewJob implements ShouldQueue
                 'completed_at' => now(),
             ]);
 
-            // TODO: Post review comments back to GitHub PR
-            // PostReviewJob::dispatch($review->id);
+            // Dispatch job to post review comments back to GitHub PR
+            \App\Jobs\PostReviewJob::dispatch($review->id);
 
         } catch (\Exception $e) {
             $review->update([
