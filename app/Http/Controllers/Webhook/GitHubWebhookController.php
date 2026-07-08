@@ -3,62 +3,77 @@
 namespace App\Http\Controllers\Webhook;
 
 use App\Http\Controllers\Controller;
-use App\Models\WebhookEvent;
-use App\Models\Repository;
+use App\Services\Webhook\WebhookSignatureService;
+use App\Services\Webhook\WebhookProcessingService;
 use App\Jobs\ProcessWebhookJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class GitHubWebhookController extends Controller
 {
+    public function __construct(
+        private WebhookSignatureService $signatureService,
+        private WebhookProcessingService $processingService
+    ) {}
+
+    /**
+     * Handle incoming GitHub webhook
+     * 
+     * Flow: Receive → Verify Signature → Store Event → Dispatch Queue Job → Return 200
+     */
     public function handle(Request $request)
     {
-        // Verify signature
-        $signature = $request->header('X-Hub-Signature-256');
-        $payload = $request->getContent();
-        
-        if (!$this->verifySignature($signature, $payload)) {
-            Log::warning('GitHub webhook signature verification failed');
+        // Rate limit: 100 webhooks per minute per IP
+        $key = 'webhook:' . $request->ip();
+        if (RateLimiter::tooManyAttempts($key, 100)) {
+            Log::warning('GitHub webhook: Rate limit exceeded', ['ip' => $request->ip()]);
+            return response()->json(['error' => 'Rate limit exceeded'], 429);
+        }
+        RateLimiter::hit($key, 60);
+
+        // Verify GitHub signature (HMAC SHA256)
+        if (!$this->signatureService->verify($request)) {
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
         $eventType = $request->header('X-GitHub-Event');
-        $deliveryId = $request->header('X-GitHub-Delivery-ID');
-        $action = $request->input('action');
+        $deliveryId = $request->header('X-GitHub-Delivery') ?? uniqid('delivery_');
 
-        // Find repository
-        $githubRepoId = $request->input('repository.id');
-        $repository = Repository::where('github_id', $githubRepoId)->first();
-
-        if (!$repository || !$repository->is_enabled) {
-            return response()->json(['message' => 'Repository not found or disabled'], 200);
+        // Only process relevant events
+        if (!in_array($eventType, ['pull_request', 'ping', 'installation', 'installation_repositories'])) {
+            return response()->json(['message' => 'Event type ignored'], 200);
         }
 
-        // Store webhook event
-        $webhookEvent = WebhookEvent::create([
+        // Handle ping event (sent when webhook is first created)
+        if ($eventType === 'ping') {
+            return response()->json(['message' => 'Pong! Webhook is configured correctly'], 200);
+        }
+
+        // Process and store the event
+        $webhookEvent = $this->processingService->processEvent(
+            $request->all(),
+            $eventType,
+            $deliveryId
+        );
+
+        if (!$webhookEvent) {
+            return response()->json(['message' => 'Event ignored (duplicate or unknown repo)'], 200);
+        }
+
+        // Dispatch to queue immediately — return 200 to GitHub right away
+        ProcessWebhookJob::dispatch($webhookEvent->id);
+
+        Log::info('GitHub webhook: Received and queued', [
             'event_id' => $deliveryId,
             'event_type' => $eventType,
-            'action' => $action,
-            'repository_id' => $repository?->id,
-            'payload' => $request->all(),
-            'status' => 'received',
+            'action' => $webhookEvent->action,
         ]);
 
-        // Dispatch to queue immediately (return 200 to GitHub)
-        ProcessWebhookJob::dispatch($webhookEvent);
-
-        return response()->json(['message' => 'Webhook received'], 200);
-    }
-
-    private function verifySignature(?string $signature, string $payload): bool
-    {
-        if (!$signature) {
-            return false;
-        }
-
-        $secret = config('services.github.webhook_secret');
-        $computedSignature = 'sha256=' . hash_hmac('sha256', $payload, $secret);
-        
-        return hash_equals($signature, $computedSignature);
+        return response()->json([
+            'message' => 'Webhook received and queued for processing',
+            'event_id' => $webhookEvent->event_id,
+            'status' => 'queued',
+        ], 200);
     }
 }

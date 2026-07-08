@@ -59,26 +59,26 @@
 
 ### Phase 4: GitHub Integration
 - [ ] Register GitHub App
-- [ ] Implement App installation flow
-- [ ] Create repository synchronization service
-- [ ] Build installation management UI
-- [ ] Store GitHub tokens securely (encrypted)
-- [ ] Implement repository settings (enable/disable reviews)
-- [ ] Add webhook verification logic
-- [ ] Create GitHub API service layer
+- [x] Implement App installation flow (GitHubAppController)
+- [x] Create repository synchronization service (RepositorySyncService)
+- [x] Build installation management UI (install/callback views)
+- [x] Store GitHub tokens securely (encrypted via GitHubTokenService)
+- [x] Implement repository settings (enable/disable reviews)
+- [x] Add webhook verification logic (in GitHubWebhookController)
+- [x] Create GitHub API service layer (GitHubApiService)
 - [ ] Handle GitHub rate limiting gracefully
 - [ ] Write GitHub integration tests with mocks
 
 ### Phase 5: Webhook Engine
-- [ ] Create webhook endpoint (`/github/webhook`)
-- [ ] Implement HMAC SHA256 signature verification
-- [ ] Store incoming webhook events
-- [ ] Parse PR events (opened, synchronized, reopened)
-- [ ] Implement immediate 200 OK response
-- [ ] Add rate limiting to webhook endpoint
-- [ ] Create webhook event model and repository
-- [ ] Dispatch webhook processing to queue
-- [ ] Add webhook retry logic for failures
+- [x] Create webhook endpoint (`/github/webhook`)
+- [x] Implement HMAC SHA256 signature verification (WebhookSignatureService)
+- [x] Store incoming webhook events
+- [x] Parse PR events (opened, synchronized, reopened)
+- [x] Implement immediate 200 OK response
+- [x] Add rate limiting to webhook endpoint (100 req/min per IP)
+- [x] Create webhook event model and repository
+- [x] Dispatch webhook processing to queue
+- [x] Add webhook retry logic for failures (3 tries with backoff)
 - [ ] Write webhook validation tests
 
 ### Phase 6: Queue System & Infrastructure
@@ -188,5 +188,6 @@
 ---
 
 **Last Updated:** 2026-07-07  
-**Current Focus:** Phase 4 - GitHub Integration
+**Current Focus:** Phase 6 - Queue System & Infrastructure
 **Phases 1-3:** ✅ Complete
+**Phases 4-5:** ✅ Complete
