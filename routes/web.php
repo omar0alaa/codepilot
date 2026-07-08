@@ -69,6 +69,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/ai-provider', [SettingsController::class, 'updateAiProvider'])->name('ai-provider.update');
         Route::post('/notifications', [SettingsController::class, 'updateNotifications'])->name('notifications.update');
     });
+    
+    // GitHub App
+    Route::prefix('github-app')->name('github-app.')->group(function () {
+        Route::get('/install', [App\Http\Controllers\GitHubAppController::class, 'install'])->name('install');
+        Route::get('/callback', [App\Http\Controllers\GitHubAppController::class, 'callback'])->name('callback');
+        Route::post('/sync', [App\Http\Controllers\GitHubAppController::class, 'sync'])->name('sync');
+        Route::post('/{repository}/enable', [App\Http\Controllers\GitHubAppController::class, 'enable'])->name('enable');
+        Route::post('/{repository}/disable', [App\Http\Controllers\GitHubAppController::class, 'disable'])->name('disable');
+    });
 });
 
 // Webhook endpoint (public, uses GitHub signature validation)

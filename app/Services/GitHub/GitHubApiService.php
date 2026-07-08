@@ -78,6 +78,20 @@ class GitHubApiService
     }
 
     /**
+     * List repositories for authenticated user
+     */
+    public function listRepositories(string $token, ?string $username = null): array
+    {
+        $url = $username
+            ? $this->baseUrl . "/users/{$username}/repos?per_page=100&type=all"
+            : $this->baseUrl . '/user/repos?per_page=100&affiliation=owner';
+
+        $response = $this->client($token)->get($url);
+
+        return $response->json() ?? [];
+    }
+
+    /**
      * List pull requests for a repository
      */
     public function listPullRequests(string $token, string $owner, string $repo, string $state = 'open'): array
