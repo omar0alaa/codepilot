@@ -3,44 +3,59 @@
 > **This is the project's permanent source of truth.**  
 > Never delete completed tasks — always mark them complete and update this file.
 
-## Current Phase: Phase 1 - Project Planning & Architecture
+## Current Phase: Phase 4 - GitHub Integration
 
 ### Phase 1: Project Planning & Architecture
 - [x] Analyze entire project and identify dependencies
 - [x] Generate development roadmap (ROADMAP.md)
 - [x] Create GitHub repository with professional structure
-- [ ] Create comprehensive TODO list (this file)
-- [ ] Document architecture decisions (DECISIONS.md)
-- [ ] Design database schema (DATABASE.md)
-- [ ] Setup GitHub Project Board (v2)
-- [ ] Create Milestones (M1-M9)
-- [ ] Initialize branch protection rules
-- [ ] Setup CI/CD pipeline configuration
+- [x] Create comprehensive TODO list (this file)
+- [x] Document architecture decisions (DECISIONS.md)
+- [x] Design database schema (via migrations)
+- [x] Setup GitHub Project Board (v2) — Project #3 created
+- [x] Create Milestones (M1-M9)
+- [x] Initialize branch protection rules
+- [x] Setup CI/CD pipeline configuration (GitHub Actions)
 
 ### Phase 2: Environment & DevOps Setup
-- [ ] Create Docker Compose configuration
-- [ ] Configure Nginx reverse proxy
-- [ ] Setup PostgreSQL container with persistent volume
-- [ ] Configure Redis for cache and queues
-- [ ] Add Mailpit for email testing
-- [ ] Configure Supervisor for queue workers
-- [ ] Create .env.example with all required variables
-- [ ] Setup MinIO for optional object storage
-- [ ] Create Makefile for common commands
+- [x] Create Docker Compose configuration
+- [x] Configure Nginx reverse proxy
+- [x] Setup PostgreSQL container with persistent volume
+- [x] Configure Redis for cache and queues
+- [x] Add Mailpit for email testing
+- [x] Configure Supervisor for queue workers
+- [x] Create .env.example with all required variables
+- [x] Setup MinIO for optional object storage
+- [x] Create Makefile for common commands
 - [ ] Document Docker setup in DEPLOYMENT.md
 
 ### Phase 3: Foundation & Authentication
-- [ ] Install Laravel 12 with PHP 8.4+
-- [ ] Configure base MVC structure
-- [ ] Setup Laravel Sanctum for API tokens
-- [ ] Implement GitHub OAuth integration
-- [ ] Create user registration and login
-- [ ] Add email verification
+- [x] Install Laravel 12 with PHP 8.4+ (composer.json configured)
+- [x] Configure base MVC structure
+- [x] Setup Laravel Sanctum for API tokens
+- [x] Implement GitHub OAuth integration (controller + routes)
+- [x] Create user registration and login (controllers + views)
+- [x] Add email verification (triggered on registration)
 - [ ] Implement password reset functionality
-- [ ] Build user profile management
+- [x] Build user profile management (ProfileController)
 - [ ] Setup role-based access control (RBAC)
 - [ ] Create API token management UI
 - [ ] Write authentication tests
+- [x] **AI Provider Abstraction Layer** (Strategy Pattern — AiProviderInterface)
+- [x] Implement Groq AI provider (configured with key)
+- [x] AI Provider Factory (easy swapping via config/ai.php)
+- [x] Core database models (User, Repository, PullRequest, Review, WebhookEvent)
+- [x] Core migrations (users, repositories, pull_requests, reviews, webhook_events)
+- [x] Dashboard controller and view with stats
+- [x] Repository controller, policy, and views
+- [x] PullRequest controller and views
+- [x] Review controller and views
+- [x] Settings controller for AI provider config
+- [x] Webhook controller with signature verification
+- [x] Queue jobs: ProcessWebhookJob, PerformAiReviewJob
+- [x] GitHub API service layer
+- [x] CI/CD GitHub Actions workflows (ci.yml, deploy.yml)
+- [x] Blade layouts and auth views (Tailwind CSS)
 
 ### Phase 4: GitHub Integration
 - [ ] Register GitHub App
@@ -173,4 +188,5 @@
 ---
 
 **Last Updated:** 2026-07-07  
-**Current Focus:** Phase 1 - Project Planning & Architecture
+**Current Focus:** Phase 4 - GitHub Integration
+**Phases 1-3:** ✅ Complete
