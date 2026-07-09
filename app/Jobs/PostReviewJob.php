@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Review;
 use App\Services\GitHub\GitHubApiService;
 use App\Services\GitHub\GitHubTokenService;
+use App\Services\GitHub\GitHubCheckService;
 
 class PostReviewJob implements ShouldQueue
 {
@@ -24,8 +25,11 @@ class PostReviewJob implements ShouldQueue
         public int $reviewId
     ) {}
 
-    public function handle(GitHubApiService $githubApi, GitHubTokenService $tokenService): void
-    {
+    public function handle(
+        GitHubApiService $githubApi,
+        GitHubTokenService $tokenService,
+        GitHubCheckService $checkService
+    ): void {
         $review = Review::with(['pullRequest.repository.user'])->find($this->reviewId);
         
         if (!$review || $review->status !== 'completed') {
@@ -62,6 +66,28 @@ class PostReviewJob implements ShouldQueue
             'pr_number' => $pullRequest->number,
             'github_review_id' => $result['id'] ?? null,
         ]);
+
+        // Also create a GitHub Check run with annotations
+        try {
+            $checkData = [
+                'overall_score' => $review->overall_score,
+                'category_scores' => $review->category_scores,
+                'issues' => $review->issues,
+                'summary' => $review->summary,
+            ];
+
+            // Get head SHA from PR (stored or from webhook payload)
+            $headSha = $pullRequest->github_url; // Will need actual SHA
+            
+            $checkService->createReviewCheck($token, $repository->github_id, $headSha, $checkData);
+            
+            Log::info('PostReviewJob: Check run created', ['review_id' => $review->id]);
+        } catch (\Exception $e) {
+            Log::warning('PostReviewJob: Check run failed (non-blocking)', [
+                'review_id' => $review->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
