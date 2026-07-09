@@ -22,6 +22,9 @@ Route::get('/', function () {
 // Authentication routes
 require __DIR__.'/auth.php';
 
+// Admin routes
+require __DIR__.'/admin.php';
+
 // Protected routes (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
     
