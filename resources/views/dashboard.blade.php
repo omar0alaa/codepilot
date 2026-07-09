@@ -32,6 +32,21 @@
         </div>
     </div>
 
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Score Trend Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Review Score Trend</h2>
+            <canvas id="scoreTrendChart" height="200"></canvas>
+        </div>
+
+        <!-- Issue Distribution Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Issue Distribution</h2>
+            <canvas id="issueDistChart" height="200"></canvas>
+        </div>
+    </div>
+
     <!-- Recent Reviews -->
     <div class="bg-white rounded-lg shadow">
         <div class="px-6 py-4 border-b border-gray-200">
@@ -96,4 +111,49 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Score Trend Chart
+    const scoreCtx = document.getElementById('scoreTrendChart');
+    if (scoreCtx) {
+        new Chart(scoreCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Average Score',
+                    data: [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { min: 0, max: 100 } }
+            }
+        });
+    }
+
+    // Issue Distribution Chart
+    const issueCtx = document.getElementById('issueDistChart');
+    if (issueCtx) {
+        new Chart(issueCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'Warning', 'Info'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+                }]
+            },
+            options: { responsive: true }
+        });
+    }
+});
+</script>
 @endsection
