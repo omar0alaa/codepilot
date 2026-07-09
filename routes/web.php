@@ -29,6 +29,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
     
+    // Analytics
+    Route::get('/analytics', [App\Http\Controllers\AnalyticsController::class, 'index'])
+        ->name('analytics.index');
+    Route::get('/analytics/repositories/{repository}/health', [App\Http\Controllers\AnalyticsController::class, 'repositoryHealth'])
+        ->name('analytics.repository-health');
+    
     // Repositories
     Route::prefix('repositories')->name('repositories.')->group(function () {
         Route::get('/', [RepositoryController::class, 'index'])->name('index');
